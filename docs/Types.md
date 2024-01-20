@@ -1,6 +1,6 @@
 ## Description
 
-Type aliases used by Daxa. They need to be included by using the `<daxa/types.hpp>` header using the C++ API. For simplicity, you can remove the need to use the Daxa namespace prefix when using these values by `using namespace daxa::types;`.
+Type aliases used by Daxa. They need to be included using the `<daxa/types.hpp>` header using the C++ API. For simplicity, you can remove the need to use the Daxa namespace prefix when using these values by using the daxa::types namespace: `using namespace daxa::types;`
 
 ## Values
 
