@@ -1,12 +1,15 @@
 ## Description
 
-Traditionally, in graphics APIs like OpenGL or earlier versions of DirectX, resources like textures and buffers were bound to specific slots or locations in the GPU's memory, and the shaders (programs running on the GPU) had to reference these resources by their slot or binding point. This approach had limitations and could lead to performance bottlenecks, especially when dealing with many resources, as the GPU needed to switch between bindings frequently.
+Traditionally, in graphics APIs like OpenGL or earlier versions of DirectX, resources like textures and buffers were bound to specific binding slots, the shaders had to reference these resources by their slot or binding point. This approach has limitations and could lead to performance bottlenecks, especially when dealing with many resources, as the GPU needed to switch between bindings frequently. Aside from performance, these bindings can be cumbersome and error prone to use.
 
-Daxa's bindless approach eliminates these limitations by allowing shaders to access resources directly without needing explicit binding points. Instead of binding resources to specific slots, Daxa bindless resources are given unique handles or descriptors that shaders can use to access the resources directly. This approach provides several advantages:
+New apis like Metal, Vulkan and Dx12 still expose some from of binding points with a more direct descriptor management. This descriptor management can become a lot of work for the user and hardware. It can also cause many hard to debug issues due to the complexity of descriptor management. 
+
+Daxa's bindless approach eliminates these limitations by allowing shaders to access resources directly without needing explicit binding points. Instead of binding resources to specific slots, Daxa bindless resources are given unique handles that shaders can use to access the resources directly. This approach provides several advantages:
 
 ## Advantages
 
 1. Improved performance: With bindless resources, shaders can access resources more efficiently, reducing the overhead associated with frequent binding and unbinding operations.
-2. Flexibility: Bindless resources make working with dynamic and large datasets easier, as shaders can access resources without worrying about available binding points.
-3. Reduced CPU overhead: Vulkan bindless reduces the CPU workload, as there's no need to manage resource bindings explicitly.
-4. Better resource utilization: Bindless allows for better resource utilization, as the GPU can dynamically allocate and use resources more efficiently.
+2. Simpler code: No management of descriptor pools, set-layouts, set-allocation, set-writes, set-binding points or sync on set-allocations.
+3. Flexibility: Bindless resources make working with dynamic and large datasets easier, as shaders can access any resource resources by handle.
+4. Less error prone: Compared to typical Vulkan and Dx12 descriptor management systems, daxa's bindless has such a small api surface that missuse and errors are less likely. 
+
