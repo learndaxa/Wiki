@@ -71,11 +71,12 @@ PipelineManager is the container of all these pipelines, so we only give the use
 > Note: This design decision is mainly due to pipeline manager being a utility designed around developing your application, not for shipping it!
 
 #### Hot Reloading
+
 The most significant feature of PipelineManager is the hot-reloading. When the shader code is changed and saved, it will recompile the pipeline. You can even `#include` headers in your shaders, and when the code in those files is updated, the PipelineManager will automatically recompile the affected pipelines for you.
 
 To use hot-reloading, we could demonstrate this by adding a `#include` to our `ShaderCode` string. Instead, to show them more directly, we will use real or virtual files. We'll review both in this document, but let's start with the actual files. We'll create a simple Daxa project structured like so:
 
-```
+```text
 my_daxa_project/
   |- src/
   |  |- main.cpp
@@ -83,6 +84,7 @@ my_daxa_project/
   |- CMakeLists.txt
   | ...
 ```
+
 > Note: We'll also be using the `my_daxa_project/` directory as the CWD when launching the application. This is important since all relative paths will be relative to the CWD. To be extra clear, with this CWD, we can address the CMakeLists.txt file by saying `./CMakeLists.txt`.
 
 Now, to use `main.glsl` as our shader source file, we need to give its path to the `ShaderCompileInfo` when adding a new pipeline, so we'll do that instead. Since we want to use a relative path, we'll say `.source = daxa::ShaderFile{"src/main.glsl"}`. If we didn't specify the full relative path, then our error check from earlier would print the following:
@@ -146,6 +148,7 @@ Now is a good time to mention the Daxa shader files, which you can and should #i
 ```
 
 Once we have this root path, we can change our `main.glsl` file like this!
+
 ```cpp
 #include <daxa/daxa.inl>
 

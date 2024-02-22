@@ -42,7 +42,7 @@ device.submit_commands({
     .wait_binary_semaphores = std::array{sema},
     .signal_timeline_semaphores = std::array{std::pair{tsema, tsema_value}},
 });
-``` 
+```
 
 This generally reduces boilerplate and conveniently merges the VkDevice and VkQeueue concepts.
 

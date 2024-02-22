@@ -11,4 +11,4 @@ Daxa's bindless approach eliminates these limitations by allowing shaders to acc
 1. Improved performance: With bindless resources, shaders can access resources more efficiently, reducing the overhead associated with frequent binding and unbinding operations.
 2. Simpler code: No management of descriptor pools, set-layouts, set-allocation, set-writes, set-binding points, or sync on set-allocations.
 3. Flexibility: Bindless resources make working with dynamic and large datasets easier, as shaders can access any resource resources by handle.
-4. Less error-prone: Compared to typical Vulkan and Dx12 descriptor management systems, Daxa's bindless has such a small API surface that misuse and errors are less likely. 
+4. Less error-prone: Compared to typical Vulkan and Dx12 descriptor management systems, Daxa's bindless has such a small API surface that misuse and errors are less likely.
