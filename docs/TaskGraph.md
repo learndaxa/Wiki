@@ -47,7 +47,7 @@ A Task consists of four parts:
 
 1. A description of how graph resources are used, the so called "Attachments".
 2. A task resource view for each attachment, telling the graph which resource belongs to which attachment.
-3. User data, such as a pointer to some context, pipeline pointer and general parameters for the task. 
+3. User data, such as a pointer to some context, pipeline pointer and general parameters for the task.
 4. The callback, describing how the work should be recorded for the task.
 
 Notably, the graph works in two phases: the recording and the execution. The callbacks of tasks are only ever called in the execution of the graph, not the recording.
@@ -109,6 +109,7 @@ Attachments describe a list of used graph resources that might require synchroni
 > Note: Any resource that is readonly for the execution of the task, like textures, do not need to be mentioned in the attachments.
 
 Each attachment consists of:
+
 * a `task resource access` (either `TaskBufferAccess` or `TaskImageAccess`),
 * a description of how the resource is meant to be used in a shader,
 * an attachment index
@@ -119,7 +120,7 @@ For persistent tasks this is obvious, take `DAXA_TH_IMAGE` as an example:
 
 TaskGraph will use all this information to generate optimal synchronization and ordering of tasks, based on the attachments and assigned resource views.
 
-Inline tasks omit some of these and set them do default values. When listing an inline attachment, one also directly assigns the view to the attachment as well. 
+Inline tasks omit some of these and set them do default values. When listing an inline attachment, one also directly assigns the view to the attachment as well.
 
 ### TaskInterface
 
@@ -129,15 +130,17 @@ For example to get the runtime information for a given attachment the interface 
 
 It takes a resource view or an attachment index directly.
 
-It returns a `TaskAttachmentInfo` (`TaskBufferAttachmentInfo` for buffers and `TaskImageAttachmentInfo` for images), this struct contains all data about the attachment given on construction as well as runtime data used by the graph. 
+It returns a `TaskAttachmentInfo` (`TaskBufferAttachmentInfo` for buffers and `TaskImageAttachmentInfo` for images), this struct contains all data about the attachment given on construction as well as runtime data used by the graph.
 
 This includes:
+
 * views assigned to attachments
 * runtime daxa resource ids
 * runtime daxa resource view ids (these are created by the graph based on the attachment view type)
 * image layout
 
 Aside from attachment information the interface also provides:
+
 * a command recorder (automatically reused by the graph)
 * a transfer memory allocator (super fast per execution linear allocator for mapped gpu memory)
 * attachment shader data (generated from the list of attachments, can be send to shader)
@@ -173,6 +176,7 @@ struct MyTaskHead
     daxa_ImageViewId          dst_buffer;
 };
 ```
+
 It is translated to the following in C++:
 
 ```c++
@@ -217,7 +221,6 @@ struct MyPushStruct
 ```
 
 ```c++
-
 struct MyTask : MyTaskHead
 {
     AttachmentViews views = {};
@@ -262,7 +265,7 @@ DAXA_TH_BUFFER_PTR_ARRAY(   TASK_ACCESS, PTR_TYPE,  NAME, SIZE)
 
 ### Task Graph Valid Use Rules
 
-- A task may use the same image multiple times, as long as the TaskImagView's slices don't overlap.
-- A task may only ever have one use of a TaskBuffer
-- All task uses must have a valid TaskResource or TaskResourceView assigned to them when adding a task.
-- All task resources must have valid image and buffer IDs assigned to them on execution.
+* A task may use the same image multiple times, as long as the TaskImagView's slices don't overlap.
+* A task may only ever have one use of a TaskBuffer
+* All task uses must have a valid TaskResource or TaskResourceView assigned to them when adding a task.
+* All task resources must have valid image and buffer IDs assigned to them on execution.
