@@ -1,0 +1,9 @@
+{
+    "grammarly.files.include": [
+        "**/*.md"
+    ],
+    "markdownlint.config": {
+        "default": true,
+        "MD041": { "level": 2 }
+    }
+}
