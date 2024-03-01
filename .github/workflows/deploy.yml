@@ -40,7 +40,7 @@ jobs:
 
         - name: Install Python dependencies
           run: |
-            pip install -r WebsiteRenderer/requirements.txt
+            pip install -r ../WebsiteRenderer/requirements.txt
 
         - name: Rendering Markdown to Svelte
           run: |
