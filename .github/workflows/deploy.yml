@@ -31,17 +31,20 @@ jobs:
         - name: Setup Python
           uses: actions/setup-python@v2
           with:
-            python-version: "3.11"
+            python-version: "3.12"
 
         - name: Clone Repos
           run: |
             git clone https://${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}@github.com/learndaxa/WebsiteTemplate.git ../WebsiteTemplate/
-            git clone https://${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}@github.com/learndaxa/WebsiteTheme.git ../WebsiteTemplate/src/lib/theme/
             git clone https://${{ secrets.PRIVATE_REPO_ACCESS_TOKEN }}@github.com/learndaxa/WebsiteRenderer.git ../WebsiteRenderer/
+
+        - name: Install Python dependencies
+          run: |
+            pip install -r WebsiteRenderer/requirements.txt
 
         - name: Rendering Markdown to Svelte
           run: |
-            python ../WebsiteRenderer/main.py --goal wiki --source "docs/" --destination "../WebsiteTemplate/"
+            python ../WebsiteRenderer/main.py --goal wiki --source "docs/" --destination "../WebsiteTemplate/src/routes/"
 
         - name: Building Static Site
           run: |
