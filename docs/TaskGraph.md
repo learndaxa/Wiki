@@ -55,8 +55,8 @@ Notably, the graph works in two phases: the recording and the execution. The cal
 There are two ways to declare a task. You can declare tasks inline, directly inside the add_task function:
 
 ```cpp
-daxa::TaskImage src = ...;
-daxa::TaskImage dst = ...;
+daxa::TaskImageView src = ...;
+daxa::TaskImageView dst = ...;
 int blur_width = ...;
 graph.add_task({
   .attachments = {
@@ -73,34 +73,7 @@ graph.add_task({
 
 This is convenient for smaller tasks or quick additions that don't necessarily need shaders.
 
-And the general way, the persistent declaration:
-
-```cpp
-// Must declare the number of attachments (here 2).
-struct MyTask : daxa::PartialTask<2, "example task">
-{
-  // Inherited field type from daxa::PartialTask<>.
-  // Must be declared in child task to make designated initializer work.
-  AttachmentViews views = {};
-  // Macros declared within daxa/task_graph.types
-  // Each Macro declares an attachment.
-  DAXA_TH_IMAGE(TRANSFER_READ, REGULAR_2D, src)
-  DAXA_TH_IMAGE(TRANSFER_WRITE, REGULAR_2D, dst)
-  int blur_width = {};
-  void callback(daxa::TaskInterface ti)
-  {
-    copy_image_to_image(ti.recorder, ti.get(src).ids[0], ti.get(dst).ids[0], blur_width);
-  }
-};
-...
-graph.add_task(MyTask{
-  .views = std::array{
-    daxa::attachment_view(MyTask::src, src),
-    daxa::attachment_view(MyTask::dst, dst),
-  },
-  .blur_width = x,
-});
-```
+The other way to declare tasks (using "task heads") is shown later.
 
 ### Task Attachments
 
@@ -147,27 +120,25 @@ Aside from attachment information the interface also provides:
 
 ### TaskHead
 
-When using shaders of any kind, one must transport the image and buffer ids to the shader via a push constant.
+When using shader resources like buffers and images, one must transport the image id or buffer pointer to the shader. In traditional apis one would bind buffers and images to an index but in daxa these need to be in a struct that is either stored inside another buffer or directly within a push constant.
 
-This means declaring a struct passed from cpu to gpu containing the runtime ids for each attachment view.
+With a little help, TaskGraph can declare AND fill a shader side struct containing ids and pointers for all resources mentioned in the list of attachments for that task.
 
-Task graph can partially automate/ deduplicate code here with task heads.
+To make task graph able to do that we need to use TaskHeads.
 
 A task head is a partial task declaration that is valid within .inl files. Its made up of macros that are translated to the correct language at preprocessing time.
 
-The partial task declaration can later be inherited within c++ to form a full task.
-
-An example:
+An example of a task head:
 
 ```c
 // within the shared file
-DAXA_DECL_TASK_HEAD_BEGIN(MyTaskHead, 2)
+DAXA_DECL_TASK_HEAD_BEGIN(MyTaskHead)
 DAXA_TH_IMAGE_ID( COMPUTE_SHADER_READ,  daxa_BufferPtr(daxa_u32), src_buffer)
 DAXA_TH_BUFFER_ID(COMPUTE_SHADER_WRITE, REGULAR_2D,               dst_image)
 DAXA_DECL_TASK_HEAD_END
 ```
 
-It is translated to the following in glsl:
+This task head declaration will translate to the following glsl shader struct:
 
 ```c
 struct MyTaskHead
@@ -177,52 +148,102 @@ struct MyTaskHead
 };
 ```
 
-It is translated to the following in C++:
+Or the following Slang-HLSL:
 
-```c++
-struct MyTaskHead : daxa::PartialTask<2, "MyTaskHead">
+```c
+struct MyTaskHead
 {
-    static inline const daxa::TaskBufferAttachmentIndex src_buffer = 
-        add_attachment(daxa::TaskBufferAttachment{             
-        .name = "src_buffer",                                     
-        .access = daxa::TaskBufferAccess::COMPUTE_SHADER_READ,     
-        .shader_array_size = 1,
-    });
-    static inline const daxa::TaskImageAttachmentIndex dst_image = 
-        add_attachment(daxa::TaskImageAttachment{             
-            .name = "dst_image",                                    
-            .access = daxa::TaskImageAccess::COMPUTE_SHADER_WRITE,     
-            .view_type = daxa::ImageViewType::REGULAR_2D, 
-            .shader_array_size = 1,
-    });
+    daxa::u32*         src_buffer;
+    daxa::ImageViewId  dst_buffer;
 };
 ```
 
-The task graph is getting exactly the information it needs to create the gpu side struct and fill it with the correct data.
+In c++ this macro declares a namespace containing a few constexpr static variables.
+In the following code i omittied some code as it is hard to read/understand on the spot:
 
-This data is given via the task interface in attachment_shader_data and can be directly put into a push constant or buffer.
+```c++
+namespace MyTaskHead
+{
+    /* TEMPALTE MAGIC */
+
+    // Number of declared attachments:
+    static inline constexpr daxa::usize ATTACHMENT_COUNT = {/* TEMPLATE MAGIC */}; 
+
+    // Attachment meta information:
+    static inline constexpr auto ATTACHMENTS = {/* TEMPLATE MAGIC */};  
+
+    // Short alias for attachment meta information:                
+    static inline constexpr auto const & AT = ATTACHMENTS;  
+
+    // Shader byte blob with the exact size and alignment of the equivalent shader struct:  
+    struct alignas(daxa::get_asb_alignment(AT)) AttachmentShaderBlob
+    {       
+        std::array<daxa::u8, daxa::get_asb_size(AT)> value = {};     
+    };     
+
+    // Partially declared task, already defining some functions, 
+    // also getting some fields into the task structs namespace: 
+    struct Task : public daxa::IPartialTask  
+    {        
+        using AttachmentViews = daxa::AttachmentViews<ATTACHMENT_COUNT>;               
+        static constexpr AttachmentsStruct<ATTACHMENT_COUNT> const & AT = ATTACHMENTS; 
+        static constexpr daxa::usize ATTACH_COUNT = ATTACHMENT_COUNT;                  
+        static auto name() -> std::string_view { return std::string_view{NAME}; }      
+        static auto attachments() -> std::span<daxa::TaskAttachment const>             
+        {                                                                              
+            return AT.attachment_decl_array;                                           
+        }                                                                              
+        static auto attachment_shader_blob_size() -> daxa::u32     
+        {                                                         
+            return sizeof(daxa::get_asb_size(AT));  
+        };          
+    };                                            
+}
+
+```
+
+The partial task in this head namespace can be inherited from to form a full task.
+
+The ATTACHMENTS constant contains all information on the attachments declared in the head. 
+That information is used within task graph to fill the shader struct with the proper data on execution.
+
+This constant is also used to declare a byte array struct (AttachmentShaderBlob) as a placeholder for the shader struct.
+This placeholder can be used to declare shared structs containing the shader shared struct.
+
+This is necessary as with the current limits of macros, we can NOT generate the shader struct as it is in c++ as well. In c++ we only have the placeholder (AttachmentShaderBlob).
 
 Extended example:
 
 ```c
 // within shared file
-DAXA_DECL_TASK_HEAD_BEGIN(MyTaskHead, 2)
-DAXA_TH_IMAGE_ID( COMPUTE_SHADER_READ,  daxa_BufferPtr(daxa_u32), src_buffer)
-DAXA_TH_BUFFER_ID(COMPUTE_SHADER_WRITE, REGULAR_2D,               dst_image)
+
+DAXA_DECL_TASK_HEAD_BEGIN(MyTaskHead)
+  // buffer attachment:   cpu side daxa::TaskBufferAccess:   shader side pointer type:       buffer name:
+  DAXA_TH_BUFFER_PTR(     COMPUTE_SHADER_READ,               daxa_BufferPtr(daxa_u32),       src_buffer)
+  // image attachment:    cpu side daxa::TaskImageAccess:    cpu side daxa::ImageViewType:   image name:
+  DAXA_TH_IMAGE_ID(       COMPUTE_SHADER_WRITE,              REGULAR_2D,                     dst_image)
 DAXA_DECL_TASK_HEAD_END
 
+// This push constant is shared in shader and c++!
 struct MyPushStruct
 {
     daxa_u32vec2 size;
     daxa_u32 settings_bitfield;
-    // This blob will become nothing in c++ and the head struct in glsl.
-    DAXA_TH_BLOB(MyTaskHead,head)
+    // The head field is an aligned byte array in c++ and the attachment struct in shader:
+    MyTaskHead::AttachmentShaderBlob attachments;
 };
 ```
 
 ```c++
-struct MyTask : MyTaskHead
+// within c++ file
+#include "shared.inl"
+
+// Inherited from the partial task declared by the task head:
+struct MyTask : MyTaskHead::Task
 {
+    // In order to allow for designated struct init in c++, 
+    // the views field can NOT be part of the partially declared task, 
+    // it must be declared here!
     AttachmentViews views = {};
     ...
     void callback(daxa::TaskInterface ti)
@@ -232,38 +253,107 @@ struct MyTask : MyTaskHead
         ti.recorder.push_constant(MyPushStruct{
             .size = ...,
             .settings_bitfield = ...,
-        });
-        // The graph automatically fills the attachment shader data.
-        ti.recorder.push_constant_vptr({
-            .data = ti.attachment_shader_data.data(),
-            .size = ti.attachment_shader_data.size(),
-            .offset = sizeof(MyPushStruct),
+            // Daxa declares convenience assignment operators.
+            // You can directly use the graph generated byte blob (ti.attachment_shader_blob)
+            // to the push constant byte blob:
+            .attachments = ti.attachment_shader_blob,
         });
         ti.dispatch(...);
     }
 };
+```
 
-#### Specifics
+Example usage of the above task:
+```c++
+
+daxa::ImageViewId some_img_view = ...;
+daxa::BufferViewId some_buf_view = ...;
+
+task_graph.add_task(MyTask{
+  .views = {
+    MyTaskHead::AT.src_buffer | some_img_view,
+    MyTaskHead::AT.dst_image | some_img_view,
+  },
+  .other_stuff = ...,
+});
+```
+
+The ATTACHMENTS or AT constants declared within the task head contain all metadata about the attachments.
+But they also contain named indices for each attachment!
+
+In the above code these named indices are used to refer to the attachments. 
+You can refer to any attachment with `HEAD_NAME::AT.attachment_name`.
+
+These indices can also be used to access information of attachments within the task callback:
+
+```c++
+void callback(daxa::TaskInterface ti)
+{
+    // The daxa::TaskInterface::get() function is defined to work on 
+    // TaskView's as well as the indices directly:
+    daxa::BufferId id = ti.get(AT.buffer_name).ids[0];
+
+    // The attachment infos contain anything you might need:
+
+    daxa::TaskBufferAttachmentInfo const & attach_info = ti.get(AT.buffer_name);        
+    char const * name               = attach_info.name;
+    TaskBufferAccess access         = attach_info.access;
+    u8 shader_array_size            = attach_info.shader_array_size;
+    bool shader_as_address          = attach_info.shader_as_address;
+    TaskBufferView view             = attach_info.view;
+    TaskBufferView translated_view  = attach_info.translated_view;
+    std::span<BufferId const> ids   = attach_info.ids;
+    
+    daxa::TaskImageAttachmentInfo const & img_attach_info = ti.get(AT.image_name);        
+    char const * name                     = img_attach_info.name;
+    TaskImageAccess access                = img_attach_info.access;
+    u8 shader_array_size                  = img_attach_info.shader_array_size;
+    bool shader_as_index                  = img_attach_info.shader_as_index;
+    TaskImageView view                    = img_attach_info.view;
+    TaskImageView translated_view         = img_attach_info.translated_view;
+    std::span<ImageId const> ids          = img_attach_info.ids;
+    // These view ids are auto generated by the task graph,
+    // based on the VIEW_TYPE and the task image view slice:
+    std::span<ImageViewId const> view_ids = img_attach_info.view_ids;
+}
+```
+
+
+### TaskHead Attachment Declarations
 
 There are multiple ways to declare how a resource is used within the shader:
 
 ```c
 DAXA_TH_IMAGE_NO_SHADER(    TASK_ACCESS,            NAME)
 DAXA_TH_IMAGE_ID(           TASK_ACCESS, VIEW_TYPE, NAME)
+DAXA_TH_IMAGE_INDEX(        TASK_ACCESS, VIEW_TYPE, NAME)
 DAXA_TH_IMAGE_ID_ARRAY(     TASK_ACCESS, VIEW_TYPE, NAME, SIZE)
+DAXA_TH_IMAGE_ID_MIP_ARRAY( TASK_ACCESS, VIEW_TYPE, NAME, SIZE)
 DAXA_TH_BUFFER_NO_SHADER(   TASK_ACCESS,            NAME)
 DAXA_TH_BUFFER_ID(          TASK_ACCESS,            NAME)
 DAXA_TH_BUFFER_PTR(         TASK_ACCESS, PTR_TYPE,  NAME)
 DAXA_TH_BUFFER_ID_ARRAY(    TASK_ACCESS,            NAME, SIZE)
 DAXA_TH_BUFFER_PTR_ARRAY(   TASK_ACCESS, PTR_TYPE,  NAME, SIZE)
+DAXA_TH_TLAS_PTR(           TASK_ACCESS,            NAME)
+DAXA_TH_BLAS(               TASK_ACCESS,            NAME)
 ```
 
+> Note: Some permutations are missing here. BLAS for example has no _ID, _INDEX or _PTR version. This is intentional, as some resources can not be used in certain ways inside shaders.
+
+* `PTR_TYPE` here refers to the shader pointer type of the buffer.
+* `VIEW_TYPE` here refers to a daxa::ImageViewType. Task graph will create image views fitting exactly this view type AND the task image views slice.
+* `NAME` here is used for the shader struct field names as well as the c++ side ATTACHMENT constants resource index names.
+* `SIZE` always refers to the size of the array.
+
+### There are multiple suffix modifiers for each resource type:
 * `_ID` postfix delcares that the resource is represented as id in the head shader struct.
+* `_INDEX` is similar to `_ID`, but instead of storing the full 64 bit id, it only stores the 32 bit index of the resource. This can save considerable push constant size.
 * `_PTR` postfix declares the resource is represented as a pointer in the head shader struct.
 * `_ARRAY` postfix declares the resource is represented as an array of ids/ptrs. Each array slot is matching a runtime resource within the runtime array of images/buffers of the TaskImage/TaskBuffer.
+* `_MIP_ARRAY` is similar to the `_ARRAY` suffix. The difference the array is filled with generated image views for each mip of the FIRST runtime image of that task image view.
 * `_NO_SHADER` postfix declares that the resource is not accessable within the shader at all. This can be useful for example when declaring a use of `COLOR_ATTACHMENT` in rasterization.
 
-### Task Graph Valid Use Rules
+### There are some additional valid usage rules:
 
 * A task may use the same image multiple times, as long as the TaskImagView's slices don't overlap.
 * A task may only ever have one use of a TaskBuffer
