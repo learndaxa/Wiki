@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: Shader Integration
 description: Shader Integration
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/shader_integration.md
 ---
 
 ## Description

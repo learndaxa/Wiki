@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: Bindless
 description: Bindless
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/bindless.md
 ---
 
 ## Description

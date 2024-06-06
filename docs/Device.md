@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: Device
 description: Device
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/device.md
 ---
 
 ## Description

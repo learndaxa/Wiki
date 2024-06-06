@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: Types
 description: Types
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/types.md
 ---
 
 ## Description

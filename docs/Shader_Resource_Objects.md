@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: Shader Ressource Objects
 description: Shader Ressource Objects
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/shader_resource_objects.md
 ---
 
 ## Id vs. Handle

@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: Pipeline Manager
 description: Pipeline Manager
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/pipeline_manager.md
 ---
 
 ## PipelineManager

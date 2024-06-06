@@ -2,7 +2,7 @@
 layout: ../layouts/WikiLayout.astro
 title: TaskGraph
 description: TaskGraph
-link: #
+link: https://github.com/learndaxa/Wiki/blob/main/docs/taskgraph.md
 ---
 
 ## TaskGraph
