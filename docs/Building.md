@@ -1,3 +1,10 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Building
+description: Building Daxa
+link: #
+---
+
 ## Getting Started
 
 Before you can build Daxa, you must first walk through the [dependency installation](https://tutorial.learndaxa.com/installing-dependencies/) step.

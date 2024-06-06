@@ -1,3 +1,10 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Shader Integration
+description: Shader Integration
+link: #
+---
+
 ## Description
 
 One of Daxa's goals is to make shader development easier.
@@ -29,7 +36,7 @@ daxa_u32 in this struct is a macro defined by daxa. This macro is translated to 
 
 The complete list of defined data types in Daxa can be found in the `daxa.inl` file.
 
-Daxa always declares the alignment of buffer references to be in a scalar block layout. This layout causes shared structs containing daxa_ types to have the alignment rules C++ and Glsl. This means that the C++ and Glsl versions of the struct will be compatible. You need not worry about padding or alignment behavior with the usual Glsl format layouts like std140 or std430.
+Daxa always declares the alignment of buffer references to be in a scalar block layout. This layout causes shared structs containing daxa\_ types to have the alignment rules C++ and Glsl. This means that the C++ and Glsl versions of the struct will be compatible. You need not worry about padding or alignment behavior with the usual Glsl format layouts like std140 or std430.
 
 ## Shader Constants
 
@@ -83,7 +90,7 @@ This can significantly reduce boilerplate, as for most images, only the default 
 
 ### Image Access in Glsl
 
-The shader access works by transforming a `daxa_ImageViewId` with or without a `daxa_SamplerId` into a Glsl `texture`, `image`, or `sampler` locally. 
+The shader access works by transforming a `daxa_ImageViewId` with or without a `daxa_SamplerId` into a Glsl `texture`, `image`, or `sampler` locally.
 
 Examples of transforming image and sampler IDs into glsl objects locally:
 
@@ -108,14 +115,14 @@ uvec2 size = textureSize(daxa_texture1DArray(img3));
 
 ### Glsl Annotations For Images
 
-In glsl, it is possible to annotate image variables with custom [qualifiers](https://www.khronos.org/opengl/wiki/Type_Qualifier_(Glsl)) and [image formats](https://www.khronos.org/opengl/wiki/Layout_Qualifier_(Glsl)). Such annotations can be: `coherent` or `readonly` and `r32ui` or `rgba16f`.
+In glsl, it is possible to annotate image variables with custom [qualifiers](<https://www.khronos.org/opengl/wiki/Type_Qualifier_(Glsl)>) and [image formats](<https://www.khronos.org/opengl/wiki/Layout_Qualifier_(Glsl)>). Such annotations can be: `coherent` or `readonly` and `r32ui` or `rgba16f`.
 Custom qualifiers are really useful and can provide better performance and more possibilities in some cases. Image formats, on the other hand, are sometimes required by some glsl functions (`imageAtomicOr` for example).
 
 To provide the image accessor macros, Daxa pre-defines image tables without any annotations. These make the access macros such as `daxa_image2D` possible to use.
 
 Pre-defining all possible permutations of qualifiers for all image types would be thousands of LOC, destroying compile times. Because of this, Daxa only pre-defines the tables used in the macros without qualifiers.
 
-To still provide a nice way to gain access to Daxa image views with the benefits of the annotations,  Daxa tries to offer the middle ground by allowing the user to declare new accessors for images with annotations when needed.
+To still provide a nice way to gain access to Daxa image views with the benefits of the annotations, Daxa tries to offer the middle ground by allowing the user to declare new accessors for images with annotations when needed.
 These custom accessors declare a new table with these annotations. Each user-defined accessor must have a unique `ACCESSOR_NAME`. This name is used to identify the accessor when using it with `daxa_access(ACCESSOR_NAME, image_view_id)`.
 
 ```glsl
@@ -188,7 +195,7 @@ The general way to access buffers in Daxa is via buffer device address and Glsl'
 
 > In order for other features to work correctly, Daxa requires very specific glsl layout specifiers for buffer references. Thus, it is necessary to use Daxas macros for buffer reference declarations!
 
-Daxa provides four ways to declare a new buffer reference: 
+Daxa provides four ways to declare a new buffer reference:
 
 - `DAXA_DECL_BUFFER_REFERENCE_ALIGN(ALIGNMENT)`: declares head for new buffer reference block with a given alignment
 - `DAXA_DECL_BUFFER_REFERENCE`: declares head for new buffer reference block with default alignment (4)
@@ -227,7 +234,7 @@ It is generally recommended to declare structs in shared files and then declare 
 Sometimes, it is necessary to use Glsl annotations/ qualifiers for fields within buffer blocks or to use Glsl features that are not available in C++. For example, the coherent annotation or unbound arrays are not valid in C++ or in Glsl/C++ structs, meaning in order to use those features, one must use a buffer reference instead of a buffer pointer.
 
 > The Daxa buffer ptr types are simply buffer references containing one field named `value` of the given struct type.
-For the `BufferPtr` macro, the field is annotated with `readonly`, while it is not with `RWBufferPtr`.
+> For the `BufferPtr` macro, the field is annotated with `readonly`, while it is not with `RWBufferPtr`.
 
 ### Buffer Access in Hlsl
 
@@ -254,7 +261,7 @@ void main()
     ByteAddressBuffer b = daxa_ByteAddressBuffer(buffer_id);
     b.Store(0, 1);
     uint read_value0 = b.Load<MyStruct>(0).field;
-    StructuredBuffer<MyStruct> my_readonly_buffer = 
+    StructuredBuffer<MyStruct> my_readonly_buffer =
         daxa_StructuredBuffer(MyStruct, buffer_id);
     uint read_value1 = my_readonly_buffer[0].field;
 }
@@ -267,7 +274,7 @@ void main()
 - [GL_KHR_memory_scope_semantics](https://github.com/KhronosGroup/Glsl/blob/master/extensions/khr/GL_KHR_memory_scope_semantics.txt)
   - Removes/replaces coherent as a buffer and image decoration in SpirV and Glsl.
   - Replaces coherent modifiers with more specific memory barriers and atomic op function calls. These new calls specify a more granular memory and execution scope for memory access (for example, perthread/subgroup/workgroup/device).
-  - The old coherent was practically ub. 
+  - The old coherent was practically ub.
   - New scopes give very granular, well-defined memory and execution scopes that can increase performance.
 - [GL_EXT_scalar_block_layout](https://github.com/KhronosGroup/Glsl/blob/master/extensions/ext/GL_EXT_scalar_block_layout.txt)
   - Allows for full parity of C++ and Glsl structs.
@@ -287,7 +294,7 @@ void main()
   - Defines fixed-size primitive types like uint32_t
   - Needed to create the well-defined struct code sharing in Daxa shared files.
 - [GL_EXT_shader_image_load_formatted](https://github.com/KhronosGroup/OpenGL-Registry/blob/main/extensions/EXT/EXT_shader_image_load_formatted.txt)
-  - Enables storage image access with no format specification in the type declaration. 
+  - Enables storage image access with no format specification in the type declaration.
   - Modern desktop GPUs don't need the format annotation at all, as they store the format in the descriptor.
   - Reduces shader bloat generated by the Daxa shader preamble considerably (would be over 10x larger without it).
   - Simplifies storage image access.

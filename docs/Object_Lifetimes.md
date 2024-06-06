@@ -1,3 +1,10 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Object Lifetimes
+description: Documentation on the lifetime of objects in Daxa
+link: #
+---
+
 ## Ids vs. reference counting
 
 Why have two different lifetime systems in Daxa?

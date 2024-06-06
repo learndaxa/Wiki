@@ -1,3 +1,10 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Pipeline Manager
+description: Pipeline Manager
+link: #
+---
+
 ## PipelineManager
 
 As Daxa is designed to be a GPU-driven centric API, we provide some code to be used within your shaders. This is in the form of `.inl` files, such as the core `daxa/daxa.inl` and the newer `daxa/utils/task_graph.inl`.
@@ -68,6 +75,7 @@ std::shared_ptr<daxa::ComputePipeline> compute_pipeline = compilation_result.val
 ```
 
 PipelineManager is the container of all these pipelines, so we only give the user a shared pointer to the underlying object. PipelineManager can modify the pipeline without the user needing to change each pipeline explicitly.
+
 > Note: This design decision is mainly due to pipeline manager being a utility designed around developing your application, not for shipping it!
 
 #### Hot Reloading
@@ -136,7 +144,7 @@ if (auto _ = std::get_if<daxa::PipelineReloadSuccess>(&reloaded_result))
     std::cout << "Successfully reloaded!\n";
 ```
 
-If we were to modify our `main.glsl` shader file while this application was running, the pipeline manager would automatically recompile `compute_pipeline` for us, with no developer intervention. This is extremely useful for iteration times since you can change your shaders as much as you like while the application runs. If the shader fails to compile, then the pipeline will not be modified and thus will continue to use the old *working* version.
+If we were to modify our `main.glsl` shader file while this application was running, the pipeline manager would automatically recompile `compute_pipeline` for us, with no developer intervention. This is extremely useful for iteration times since you can change your shaders as much as you like while the application runs. If the shader fails to compile, then the pipeline will not be modified and thus will continue to use the old _working_ version.
 
 Now is a good time to mention the Daxa shader files, which you can and should #include in your shaders for ease of development. These are in the Daxa include directory, but this can be hard to find when using Daxa as a vcpkg dependency. To remedy this, the Daxa CMake package provides a C++ #define which has the full path to the Daxa include directory: `DAXA_SHADER_INCLUDE_DIR`. We can add this to our `.root_paths` to allow us to `#include` the Daxa headers in our shaders.
 
@@ -189,7 +197,7 @@ pipeline_manager.add_virtual_file({
 pipeline_manager.add_virtual_file({
     .name = "my_file",
     .contents = R"glsl(
-        // Here we can 
+        // Here we can
         #include <my_include>
 
         #ifndef MY_INCLUDE_DEFINE

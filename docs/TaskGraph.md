@@ -1,3 +1,10 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: TaskGraph
+description: TaskGraph
+link: #
+---
+
 ## TaskGraph
 
 As Vulkan and Daxa require manual synchronization, using Daxa and Vulkan can become quite complex and error-prone.
@@ -15,13 +22,13 @@ All in all, this allows for automatically optimized, low CPU cost synchronizatio
 
 Overview of the workflow for the task graph:
 
-* Create tasks
-* Create task resources
-* Add tasks to graph
-* Complete task graph
-* Execute task graph
-* (optional) Repeatedly reassign resources to task resources
-* (optional) Repeatedly execute task graph
+- Create tasks
+- Create task resources
+- Add tasks to graph
+- Complete task graph
+- Execute task graph
+- (optional) Repeatedly reassign resources to task resources
+- (optional) Repeatedly execute task graph
 
 ## Task Resources
 
@@ -41,7 +48,7 @@ The core part of any render graph is the nodes in the graph. In the case of Daxa
 
 A task is a unit of work. It might be a single compute dispatch or multiple dispatches/render passes/raytracing dispatches. What limits the size of a task is resource dependencies that require synchronization.
 
-Synchronization is only inserted *between* tasks. If dispatch A writes an image and dispatch B needs to read the finished content, both dispatches *must* be within different tasks, so task graph is able to synchronize.
+Synchronization is only inserted _between_ tasks. If dispatch A writes an image and dispatch B needs to read the finished content, both dispatches _must_ be within different tasks, so task graph is able to synchronize.
 
 A Task consists of four parts:
 
@@ -83,9 +90,9 @@ Attachments describe a list of used graph resources that might require synchroni
 
 Each attachment consists of:
 
-* a `task resource access` (either `TaskBufferAccess` or `TaskImageAccess`),
-* a description of how the resource is meant to be used in a shader,
-* an attachment index
+- a `task resource access` (either `TaskBufferAccess` or `TaskImageAccess`),
+- a description of how the resource is meant to be used in a shader,
+- an attachment index
 
 For persistent tasks this is obvious, take `DAXA_TH_IMAGE` as an example:
 
@@ -107,16 +114,16 @@ It returns a `TaskAttachmentInfo` (`TaskBufferAttachmentInfo` for buffers and `T
 
 This includes:
 
-* views assigned to attachments
-* runtime daxa resource ids
-* runtime daxa resource view ids (these are created by the graph based on the attachment view type)
-* image layout
+- views assigned to attachments
+- runtime daxa resource ids
+- runtime daxa resource view ids (these are created by the graph based on the attachment view type)
+- image layout
 
 Aside from attachment information the interface also provides:
 
-* a command recorder (automatically reused by the graph)
-* a transfer memory allocator (super fast per execution linear allocator for mapped gpu memory)
-* attachment shader data (generated from the list of attachments, can be send to shader)
+- a command recorder (automatically reused by the graph)
+- a transfer memory allocator (super fast per execution linear allocator for mapped gpu memory)
+- attachment shader data (generated from the list of attachments, can be send to shader)
 
 ### TaskHead
 
@@ -167,44 +174,44 @@ namespace MyTaskHead
     /* TEMPALTE MAGIC */
 
     // Number of declared attachments:
-    static inline constexpr daxa::usize ATTACHMENT_COUNT = {/* TEMPLATE MAGIC */}; 
+    static inline constexpr daxa::usize ATTACHMENT_COUNT = {/* TEMPLATE MAGIC */};
 
     // Attachment meta information:
-    static inline constexpr auto ATTACHMENTS = {/* TEMPLATE MAGIC */};  
+    static inline constexpr auto ATTACHMENTS = {/* TEMPLATE MAGIC */};
 
-    // Short alias for attachment meta information:                
-    static inline constexpr auto const & AT = ATTACHMENTS;  
+    // Short alias for attachment meta information:
+    static inline constexpr auto const & AT = ATTACHMENTS;
 
-    // Shader byte blob with the exact size and alignment of the equivalent shader struct:  
+    // Shader byte blob with the exact size and alignment of the equivalent shader struct:
     struct alignas(daxa::get_asb_alignment(AT)) AttachmentShaderBlob
-    {       
-        std::array<daxa::u8, daxa::get_asb_size(AT)> value = {};     
-    };     
+    {
+        std::array<daxa::u8, daxa::get_asb_size(AT)> value = {};
+    };
 
-    // Partially declared task, already defining some functions, 
-    // also getting some fields into the task structs namespace: 
-    struct Task : public daxa::IPartialTask  
-    {        
-        using AttachmentViews = daxa::AttachmentViews<ATTACHMENT_COUNT>;               
-        static constexpr AttachmentsStruct<ATTACHMENT_COUNT> const & AT = ATTACHMENTS; 
-        static constexpr daxa::usize ATTACH_COUNT = ATTACHMENT_COUNT;                  
-        static auto name() -> std::string_view { return std::string_view{NAME}; }      
-        static auto attachments() -> std::span<daxa::TaskAttachment const>             
-        {                                                                              
-            return AT.attachment_decl_array;                                           
-        }                                                                              
-        static auto attachment_shader_blob_size() -> daxa::u32     
-        {                                                         
-            return sizeof(daxa::get_asb_size(AT));  
-        };          
-    };                                            
+    // Partially declared task, already defining some functions,
+    // also getting some fields into the task structs namespace:
+    struct Task : public daxa::IPartialTask
+    {
+        using AttachmentViews = daxa::AttachmentViews<ATTACHMENT_COUNT>;
+        static constexpr AttachmentsStruct<ATTACHMENT_COUNT> const & AT = ATTACHMENTS;
+        static constexpr daxa::usize ATTACH_COUNT = ATTACHMENT_COUNT;
+        static auto name() -> std::string_view { return std::string_view{NAME}; }
+        static auto attachments() -> std::span<daxa::TaskAttachment const>
+        {
+            return AT.attachment_decl_array;
+        }
+        static auto attachment_shader_blob_size() -> daxa::u32
+        {
+            return sizeof(daxa::get_asb_size(AT));
+        };
+    };
 }
 
 ```
 
 The partial task in this head namespace can be inherited from to form a full task.
 
-The ATTACHMENTS constant contains all information on the attachments declared in the head. 
+The ATTACHMENTS constant contains all information on the attachments declared in the head.
 That information is used within task graph to fill the shader struct with the proper data on execution.
 
 This constant is also used to declare a byte array struct (AttachmentShaderBlob) as a placeholder for the shader struct.
@@ -241,8 +248,8 @@ struct MyPushStruct
 // Inherited from the partial task declared by the task head:
 struct MyTask : MyTaskHead::Task
 {
-    // In order to allow for designated struct init in c++, 
-    // the views field can NOT be part of the partially declared task, 
+    // In order to allow for designated struct init in c++,
+    // the views field can NOT be part of the partially declared task,
     // it must be declared here!
     AttachmentViews views = {};
     ...
@@ -264,6 +271,7 @@ struct MyTask : MyTaskHead::Task
 ```
 
 Example usage of the above task:
+
 ```c++
 
 daxa::ImageViewId some_img_view = ...;
@@ -281,7 +289,7 @@ task_graph.add_task(MyTask{
 The ATTACHMENTS or AT constants declared within the task head contain all metadata about the attachments.
 But they also contain named indices for each attachment!
 
-In the above code these named indices are used to refer to the attachments. 
+In the above code these named indices are used to refer to the attachments.
 You can refer to any attachment with `HEAD_NAME::AT.attachment_name`.
 
 These indices can also be used to access information of attachments within the task callback:
@@ -289,13 +297,13 @@ These indices can also be used to access information of attachments within the t
 ```c++
 void callback(daxa::TaskInterface ti)
 {
-    // The daxa::TaskInterface::get() function is defined to work on 
+    // The daxa::TaskInterface::get() function is defined to work on
     // TaskView's as well as the indices directly:
     daxa::BufferId id = ti.get(AT.buffer_name).ids[0];
 
     // The attachment infos contain anything you might need:
 
-    daxa::TaskBufferAttachmentInfo const & attach_info = ti.get(AT.buffer_name);        
+    daxa::TaskBufferAttachmentInfo const & attach_info = ti.get(AT.buffer_name);
     char const * name               = attach_info.name;
     TaskBufferAccess access         = attach_info.access;
     u8 shader_array_size            = attach_info.shader_array_size;
@@ -303,8 +311,8 @@ void callback(daxa::TaskInterface ti)
     TaskBufferView view             = attach_info.view;
     TaskBufferView translated_view  = attach_info.translated_view;
     std::span<BufferId const> ids   = attach_info.ids;
-    
-    daxa::TaskImageAttachmentInfo const & img_attach_info = ti.get(AT.image_name);        
+
+    daxa::TaskImageAttachmentInfo const & img_attach_info = ti.get(AT.image_name);
     char const * name                     = img_attach_info.name;
     TaskImageAccess access                = img_attach_info.access;
     u8 shader_array_size                  = img_attach_info.shader_array_size;
@@ -317,7 +325,6 @@ void callback(daxa::TaskInterface ti)
     std::span<ImageViewId const> view_ids = img_attach_info.view_ids;
 }
 ```
-
 
 ### TaskHead Attachment Declarations
 
@@ -338,24 +345,25 @@ DAXA_TH_TLAS_PTR(           TASK_ACCESS,            NAME)
 DAXA_TH_BLAS(               TASK_ACCESS,            NAME)
 ```
 
-> Note: Some permutations are missing here. BLAS for example has no _ID, _INDEX or _PTR version. This is intentional, as some resources can not be used in certain ways inside shaders.
+> Note: Some permutations are missing here. BLAS for example has no \_ID, \_INDEX or \_PTR version. This is intentional, as some resources can not be used in certain ways inside shaders.
 
-* `PTR_TYPE` here refers to the shader pointer type of the buffer.
-* `VIEW_TYPE` here refers to a daxa::ImageViewType. Task graph will create image views fitting exactly this view type AND the task image views slice.
-* `NAME` here is used for the shader struct field names as well as the c++ side ATTACHMENT constants resource index names.
-* `SIZE` always refers to the size of the array.
+- `PTR_TYPE` here refers to the shader pointer type of the buffer.
+- `VIEW_TYPE` here refers to a daxa::ImageViewType. Task graph will create image views fitting exactly this view type AND the task image views slice.
+- `NAME` here is used for the shader struct field names as well as the c++ side ATTACHMENT constants resource index names.
+- `SIZE` always refers to the size of the array.
 
 ### There are multiple suffix modifiers for each resource type:
-* `_ID` postfix delcares that the resource is represented as id in the head shader struct.
-* `_INDEX` is similar to `_ID`, but instead of storing the full 64 bit id, it only stores the 32 bit index of the resource. This can save considerable push constant size.
-* `_PTR` postfix declares the resource is represented as a pointer in the head shader struct.
-* `_ARRAY` postfix declares the resource is represented as an array of ids/ptrs. Each array slot is matching a runtime resource within the runtime array of images/buffers of the TaskImage/TaskBuffer.
-* `_MIP_ARRAY` is similar to the `_ARRAY` suffix. The difference the array is filled with generated image views for each mip of the FIRST runtime image of that task image view.
-* `_NO_SHADER` postfix declares that the resource is not accessable within the shader at all. This can be useful for example when declaring a use of `COLOR_ATTACHMENT` in rasterization.
+
+- `_ID` postfix delcares that the resource is represented as id in the head shader struct.
+- `_INDEX` is similar to `_ID`, but instead of storing the full 64 bit id, it only stores the 32 bit index of the resource. This can save considerable push constant size.
+- `_PTR` postfix declares the resource is represented as a pointer in the head shader struct.
+- `_ARRAY` postfix declares the resource is represented as an array of ids/ptrs. Each array slot is matching a runtime resource within the runtime array of images/buffers of the TaskImage/TaskBuffer.
+- `_MIP_ARRAY` is similar to the `_ARRAY` suffix. The difference the array is filled with generated image views for each mip of the FIRST runtime image of that task image view.
+- `_NO_SHADER` postfix declares that the resource is not accessable within the shader at all. This can be useful for example when declaring a use of `COLOR_ATTACHMENT` in rasterization.
 
 ### There are some additional valid usage rules:
 
-* A task may use the same image multiple times, as long as the TaskImagView's slices don't overlap.
-* A task may only ever have one use of a TaskBuffer
-* All task uses must have a valid TaskResource or TaskResourceView assigned to them when adding a task.
-* All task resources must have valid image and buffer IDs assigned to them on execution.
+- A task may use the same image multiple times, as long as the TaskImagView's slices don't overlap.
+- A task may only ever have one use of a TaskBuffer
+- All task uses must have a valid TaskResource or TaskResourceView assigned to them when adding a task.
+- All task resources must have valid image and buffer IDs assigned to them on execution.

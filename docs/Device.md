@@ -1,3 +1,10 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Device
+description: Device
+link: #
+---
+
 ## Description
 
 The device in Daxa is essentially a `VkDevice` in Vulkan, but it carries much more responsibility.
@@ -83,21 +90,21 @@ This is necessary to ensure the efficiency of validation in command recording. C
 
 ```cpp
 auto daxa_cmd_copy_buffer_to_buffer(
-    daxa_CommandRecorder self, 
-    daxa_BufferCopyInfo const * info) 
+    daxa_CommandRecorder self,
+    daxa_BufferCopyInfo const * info)
 -> daxa_Result
 {
     ...
     // We check the validity of the IDs here.
-    _DAXA_CHECK_AND_REMEMBER_IDS(self, info->src_buffer, info->dst_buffer)            
+    _DAXA_CHECK_AND_REMEMBER_IDS(self, info->src_buffer, info->dst_buffer)
     // After we checked the IDs, another thread could destroy the used buffers
     // and call collect garbage, fully deleting the data for the buffers internally.
     // This would cause the IDs to dangle; we would read garbage past here.
-    auto vk_buffer_copy = std::bit_cast<VkBufferCopy>(info->src_offset);    
+    auto vk_buffer_copy = std::bit_cast<VkBufferCopy>(info->src_offset);
     vkCmdCopyBuffer(
         self->current_command_data.vk_cmd_buffer,
         // We read the internal data of the buffers here.
-        self->device->slot(info->src_buffer).vk_buffer,                                 
+        self->device->slot(info->src_buffer).vk_buffer,
         self->device->slot(info->dst_buffer).vk_buffer,
         1,
         vk_buffer_copy);
