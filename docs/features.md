@@ -1,7 +1,14 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Features
+description: Features
+link: #
+---
+
 ## Easy Resource Lifetimes
 
 - Most resources are reference counted in Daxa (Instance, Device, Swapchain, Semaphore, ...) for convenience.
-- For shader resources (Buffer, Image, ImageView, Sampler) however, Daxa does not reference count, because  :
+- For shader resources (Buffer, Image, ImageView, Sampler) however, Daxa does not reference count, because :
   - Bindless shader resource IDs/addresses can be stored in buffers and other memory, making Daxa unable to consistently track them.
   - In API calls, they are mentioned with much higher frequency compared to other objects, making their tracking with reference counts much more expensive.
   - In contrast to other objects, it is very common to build other more specialized lifetime management for shader resources (eg. static, cached, streamed, dynamically created, ...).
@@ -72,7 +79,7 @@
 - Automatically managed memory allocations with VMA. Optionally exposed manual management.
 - Daxa stores and lets you get the info structs used in object creation. Very useful, as you do not need to store the object's metadata yourself.
 - Abstraction of image aspect. In 99% of cases (Daxa has no sparse image support) Daxa can infer the perfect image aspect for an operation, which is why it's abstracted to reduce boilerplate.
-- Next to bindless, Daxa also provides simplified uniform buffer bindings, as some hardware can still profit from these greatly. 
+- Next to bindless, Daxa also provides simplified uniform buffer bindings, as some hardware can still profit from these greatly.
 - FSR 2.1 integration
 - ImGUI backend
 - Staging memory allocator utility. Provides a fast linear staging memory allocator for small per-frame uploads.

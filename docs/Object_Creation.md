@@ -1,12 +1,19 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Object Creation
+description: Documentation on the creation of objects in Daxa
+link: #
+---
+
 ## Initialization
 
 For nearly all functions, Daxa uses structs as parameters. They follow the naming convention of `<Thing>Info`.
 
 There are several significant advantages of struct parameters in conjunction with c++20 designated initialization:
 
-* Default function parameters
-* Out-of-order default function parameters
-* Named function parameters
+- Default function parameters
+- Out-of-order default function parameters
+- Named function parameters
 
 Here is an example of the creation of a `daxa::Instance`:
 

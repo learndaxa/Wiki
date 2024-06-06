@@ -1,8 +1,15 @@
+---
+layout: ../layouts/WikiLayout.astro
+title: Bindless
+description: Bindless
+link: #
+---
+
 ## Description
 
 Traditionally, in graphics APIs like OpenGL or earlier versions of DirectX, resources like textures and buffers were bound to specific binding slots; the shaders had to reference these resources by their slot or binding point. This approach has limitations and could lead to performance bottlenecks, especially when dealing with many resources, as the GPU needs to switch between bindings frequently. Aside from performance, these bindings can be cumbersome and error-prone to use.
 
-New APIs like Metal, Vulkan, and Dx12 still expose some form of binding points with a more direct descriptor management. This descriptor management can become much work for the user and hardware. It can also cause many hard-to-debug issues due to the complexity of descriptor management. 
+New APIs like Metal, Vulkan, and Dx12 still expose some form of binding points with a more direct descriptor management. This descriptor management can become much work for the user and hardware. It can also cause many hard-to-debug issues due to the complexity of descriptor management.
 
 Daxa's bindless approach eliminates these limitations by allowing shaders to access resources directly without needing explicit binding points. Instead of binding resources to specific slots, Daxa bindless resources are given unique handles that shaders can use to access the resources directly. This approach provides several advantages:
 
