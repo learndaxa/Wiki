@@ -146,33 +146,50 @@ void main() {
 }
 ```
 
-### Image Access in Hlsl
+### Image Access in Slang
 
-To get access to images in Hlsl, you create a local Hlsl texture object in the shader from the image ID.
+To get access to images in Slang, you create a local Slang texture object in the shader from the image ID.
 
-Constructing a texture handle in Hlsl is done with macro constructors similar to glsl. These constructors look like this: `daxa_##HLSL_TEXTURE_TYPE(TEX_RET_TYPE, IMAGE_VIEW_ID)`.
+To get a texture handle with slang you call the static get function:
+```cpp
+// (RW)Texture(DIM)<T>::Get(index_or_id)
+// Example:
+Texture2D<float4> tex = Texture2D<float4>::Get(id_or_index);
+```
+Every Slang texture type has this function.
+
+Another way to get a handle is via direct table access:
+```cpp
+Texture2D<float4> tex = daxa::sampled_images[id.index()];
+```
+This works in a similar way to DirectX12 direct head indexing.
+
+Finally, to get the texture type of a typed id/index you call the get member function:
+```cpp
+Texture2DId<float4> tex_id= ...;
+Texture2D<float4> tex = tex_id.get();
+```
 
 > Note: In contrast to glsl, you can treat the returned Hlsl texture handles as local variables.
 
-> Note: Currently, only 4 component return types for texture functions are implemented; this is done to reduce the header bloat. The generated code will be of the same quality.
-
 Example:
 
-```hlsl
-#include <daxa/daxa.hlsl>
+```cpp
+#include <daxa/daxa.slang>
 ...
 daxa::ImageViewId img = ...;
+daxa::Texture3Did<int4> typed_img = img;
 daxa::SamplerId smp = ...;
-// Alternative one: using a macro to construct a texture handle locally. Used in place.
-int4 v = daxa_Texture3D(int4, img).Sample(smp, float3(...));
-int4 v = t.Sample(smp, float3(...));
+
+int4 v0 = Texture3D<int4>::Get(img).Sample(smp, float3(...));
+int4 v1 = typed_img.get().Sample(smp, float3(...));
 
 daxa::ImageViewId img2 = ...;
-daxa_RWTexture2D(float4, img2)[int2(...)] = float4(...);
+RWTexture2D<float4>::Get(img2)[int2(...)] = float4(...);
 
 daxa::ImageViewId img3 = ...;
 // Alternative two: As you can treat them as local variables in Hlsl, the following is also possible:
-Texture1DArray<float4> t = daxa_Texture1DArray(float4, img3);
+Texture1DArray<float4> t = daxa::sampled_images[img3.index()];
 uint mips; uint width; uint elements; uint levels;
 t.GetDimensions(mips, width, elements, levels);
 ...
@@ -236,34 +253,28 @@ Sometimes, it is necessary to use Glsl annotations/ qualifiers for fields within
 > The Daxa buffer ptr types are simply buffer references containing one field named `value` of the given struct type.
 > For the `BufferPtr` macro, the field is annotated with `readonly`, while it is not with `RWBufferPtr`.
 
-### Buffer Access in Hlsl
+### Buffer Access in Slang
 
-As Hlsl has poor buffer device address support, hence Daxa relies on StructuredBuffer and ByteAddressBuffer for buffers in Hlsl.
-
-These are constructed similarly to texture handles in Hlsl with a construction macro: `daxa_ByteAddressBuffer(BUFFER_ID)`, `daxa_RWByteAddressBuffer(BUFFER_ID)`, `daxa_StructuredBuffer(STRUCT_TYPE, BUFFER_ID)`.
-
-Note that in order to use StructuredBuffer for a given struct type, you must use the `DAXA_DECL_BUFFER_PTR` macro for that struct. This is due to limitations of Hlsl and backward compatibility reasons with glsl.
-
+In Slang you can either use c style pointers or the old school hlsl buffer types.
 Example:
 
-```hlsl
-#include <daxa.hlsl>
+```cpp
+#include <daxa.slang>
 ...
 struct MyStruct
 {
     uint field;
 };
-DAXA_DECL_BUFFER_PTR(MyStruct)
+// Slang doesnt need the buffer ptr macros :D:
+// DAXA_DECL_BUFFER_PTR(MyStruct)
 
 void main()
 {
     daxa::BufferId buffer_id = ...;
-    ByteAddressBuffer b = daxa_ByteAddressBuffer(buffer_id);
+    float* buffer_ptr = ...;
+    ByteAddressBuffer b = ByteAddressBuffer::Get(buffer_id);
     b.Store(0, 1);
-    uint read_value0 = b.Load<MyStruct>(0).field;
-    StructuredBuffer<MyStruct> my_readonly_buffer =
-        daxa_StructuredBuffer(MyStruct, buffer_id);
-    uint read_value1 = my_readonly_buffer[0].field;
+    *buffer_ptr = 0.0f;
 }
 ```
 
