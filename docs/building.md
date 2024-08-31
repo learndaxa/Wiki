@@ -1,8 +1,7 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: Building
 description: Building Daxa
-link: https://github.com/learndaxa/Wiki/blob/main/docs/building.md
+slug: building
 ---
 
 ## Getting Started

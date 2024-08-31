@@ -1,8 +1,7 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: Object Creation
 description: Documentation on the creation of objects in Daxa
-link: https://github.com/learndaxa/Wiki/blob/main/docs/object_creation.md
+slug: object-creation
 ---
 
 ## Initialization
