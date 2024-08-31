@@ -2,7 +2,9 @@
 title: Features
 description: Features
 slug: features
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/features.md
 ---
+
 
 ## Easy Resource Lifetimes
 

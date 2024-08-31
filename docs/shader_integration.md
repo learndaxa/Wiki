@@ -2,6 +2,7 @@
 title: Shader Integration
 description: Shader Integration
 slug: shader-integration
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/shader_integration.md
 ---
 
 ## Description

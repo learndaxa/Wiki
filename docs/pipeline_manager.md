@@ -2,6 +2,7 @@
 title: Pipeline Manager
 description: Pipeline Manager
 slug: pipeline-manager
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/pipeline_manager.md
 ---
 
 ## PipelineManager

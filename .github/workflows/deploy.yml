@@ -40,11 +40,10 @@ jobs:
         - name: 'Create ENV File'
           run: |
             touch ../StarlightWiki/.env
-            echo VITE_TITLE="Tutorial" >> ../StarlightWiki/.env
+            echo VITE_TITLE="Daxa Wiki" >> ../StarlightWiki/.env
             echo VITE_SITE_URL="https://wiki.daxa.dev" >> ../StarlightWiki/.env
             echo VITE_GITHUB_URL="https://github.com/learndaxa/Wiki" >> ../StarlightWiki/.env
             echo VITE_DISCORD_INVITE="https://discord.gg/mZrUeJfxB8" >> ../StarlightWiki/.env
-            echo VITE_GITHUB_EDIT_LINK="https://github.com/learndaxa/Tutorial/edit/main/docs/" >> ../StarlightWiki/.env
 
         - name: Building Static Site
           run: |

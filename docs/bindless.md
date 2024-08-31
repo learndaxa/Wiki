@@ -2,6 +2,7 @@
 title: Bindless
 description: Bindless
 slug: bindless
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/bindless.md
 ---
 
 ## Description

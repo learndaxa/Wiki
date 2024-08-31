@@ -2,6 +2,7 @@
 title: Object Lifetimes
 description: Documentation on the lifetime of objects in Daxa
 slug: object-lifetimes
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/object_lifetimes.md
 ---
 
 ## Ids vs. reference counting

@@ -2,6 +2,7 @@
 title: Object Creation
 description: Documentation on the creation of objects in Daxa
 slug: object-creation
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/object_creation.md
 ---
 
 ## Initialization
