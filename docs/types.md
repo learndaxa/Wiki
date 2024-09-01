@@ -1,7 +1,7 @@
 ---
 title: Types
 description: Types
-tslug: types
+slug: types
 editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/types.md
 ---
 
