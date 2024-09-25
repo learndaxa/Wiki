@@ -1,8 +1,8 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: Types
 description: Types
-link: https://github.com/learndaxa/Wiki/blob/main/docs/types.md
+slug: types
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/types.md
 ---
 
 ## Description

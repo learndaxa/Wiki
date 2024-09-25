@@ -1,9 +1,10 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: Features
 description: Features
-link: https://github.com/learndaxa/Wiki/blob/main/docs/features.md
+slug: features
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/features.md
 ---
+
 
 ## Easy Resource Lifetimes
 

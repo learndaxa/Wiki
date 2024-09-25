@@ -1,8 +1,8 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: TaskGraph
 description: TaskGraph
-link: https://github.com/learndaxa/Wiki/blob/main/docs/taskgraph.md
+slug: taskgraph
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/taskgraph.md
 ---
 
 ## TaskGraph
@@ -435,7 +435,7 @@ There are multiple ways to declare how a resource is used within the shader:
 
 > Note: Some permutations are missing here. BLAS for example has no \_ID, \_INDEX or \_PTR version. This is intentional, as some resources can not be used in certain ways inside shaders.
 
-### There are some additional valid usage rules:
+### There are some additional valid usage rules
 
 - A task may use the same image multiple times, as long as the TaskImagView's slices don't overlap.
 - A task may only ever have one use of a TaskBuffer

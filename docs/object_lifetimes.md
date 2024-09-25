@@ -1,8 +1,8 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: Object Lifetimes
 description: Documentation on the lifetime of objects in Daxa
-link: https://github.com/learndaxa/Wiki/blob/main/docs/object_lifetimes.md
+slug: object-lifetimes
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/object_lifetimes.md
 ---
 
 ## Ids vs. reference counting

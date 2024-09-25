@@ -26,27 +26,35 @@ jobs:
         - name: Setup Node.js
           uses: actions/setup-node@v2
           with:
-            node-version: "20"
+            node-version: "22"
 
-        - name: Clone Wiki Template
+        - name: Clone Starlight Wiki Template
           run: |
-            git clone https://github.com/learndaxa/WikiTemplate.git ../WikiTemplate/
+            git clone https://github.com/learndaxa/StarlightWiki.git ../StarlightWiki/
 
         - name: Copy Wiki Pages
           run: |
-            mkdir -p ../WikiTemplate/src/pages/
-            cp -r ./docs/* ../WikiTemplate/src/pages/
+            mkdir -p ../StarlightWiki/src/content/docs/
+            cp -r ./docs/* ../StarlightWiki/src/content/docs/
+
+        - name: 'Create ENV File'
+          run: |
+            touch ../StarlightWiki/.env
+            echo VITE_TITLE="Daxa Wiki" >> ../StarlightWiki/.env
+            echo VITE_SITE_URL="https://wiki.daxa.dev" >> ../StarlightWiki/.env
+            echo VITE_GITHUB_URL="https://github.com/learndaxa/Wiki" >> ../StarlightWiki/.env
+            echo VITE_DISCORD_INVITE="https://discord.gg/mZrUeJfxB8" >> ../StarlightWiki/.env
 
         - name: Building Static Site
           run: |
-            cd ../WikiTemplate/
+            cd ../StarlightWiki/
             npm install
-            npm run build
+            npm run astro build
 
         - name: Upload artifact
           uses: actions/upload-pages-artifact@v1
           with:
-            path: "../WikiTemplate/dist/"
+            path: "../StarlightWiki/dist/"
 
         - name: Deploy to GitHub Pages
           id: deployment

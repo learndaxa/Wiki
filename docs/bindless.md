@@ -1,8 +1,8 @@
 ---
-layout: ../layouts/WikiLayout.astro
 title: Bindless
 description: Bindless
-link: https://github.com/learndaxa/Wiki/blob/main/docs/bindless.md
+slug: bindless
+editUrl: https://github.com/learndaxa/Wiki/edit/main/docs/bindless.md
 ---
 
 ## Description
