@@ -135,7 +135,7 @@ This means that in traditional apis you must list the attachments many times:
 3. when assigning the indices/bindings for the api
 4. once when assigning task buffer/task image views to the attachments
 
-Daxa can help you a lot here by reducing the reduncancy here with task heads. Task heads allow you to declare a struct in shader containing all indices/pointers to resources AS WELL AS the attachments for a task in one go! With task heads you only need to:
+Daxa can help you a lot here by reducing the reduncancy with task heads. Task heads allow you to declare a struct in shader containing all indices/pointers to resources AS WELL AS the attachments for a task in one go! With task heads you only need to:
 1. list resource in attachment
 2. assign view to attachment
 
@@ -314,7 +314,7 @@ task_graph.add_task(daxa::InlineTaskWithHead<MyTaskHead::Task>{
 ```
 
 
-### TaskInterface
+### TaskInterface and Attachment Information
 
 The ATTACHMENTS or AT constants declared within the task head contain all metadata about the attachments.
 But they also contain named indices for each attachment!
