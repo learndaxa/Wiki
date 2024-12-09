@@ -78,6 +78,12 @@ graph.add_task({
 });
 ```
 
+> NOTE: There is a third defaulted parameter to inl_attachment, taking in the VIEW_TYPE for the image.
+>       When filling this VIEW_TYPE parameter, task graph will create an image view that exactly fits
+>       the dimensions of the attachments view slice.
+>       When this parameter is defaulted, daxa will fill the image view id with 0.
+>       How to access these tg generated image views is shown later.
+
 This is convenient for smaller tasks or quick additions that don't necessarily need shaders.
 
 The other way to declare tasks (using "task heads") is shown later.
@@ -356,6 +362,10 @@ void callback(daxa::TaskInterface ti)
         [[maybe_unused]] daxa::ImageLayout layout = ti.get(AT.dst_image).layout;
         [[maybe_unused]] daxa::TaskImageView view = ti.get(AT.dst_image).view;
         [[maybe_unused]] std::span<daxa::ImageId const> ids = ti.get(AT.dst_image).ids;
+
+        /// WARNING: ImageViews are only filled out for attachments that set the VIEW_TYPE!
+        ///          If you use an inline attachment and dont specify the VIEW_TYPE like for a transfer op,
+        ///          there will be an empty daxa::ImageViewId{} put into this array for the attachment!
         [[maybe_unused]] std::span<daxa::ImageViewId const> view_ids = ti.get(AT.dst_image).view_ids;
     }
     // The interface has multiple convenience functions for easier access to the underlying resources attributes:
