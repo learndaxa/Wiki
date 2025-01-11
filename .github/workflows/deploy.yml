@@ -3,6 +3,9 @@ on:
   push:
     branches: ["main"]
   workflow_dispatch:
+  repository_dispatch:
+    types:
+      - starlight_wiki_build
 
 permissions:
   contents: read
