@@ -37,19 +37,11 @@ jobs:
             mkdir -p ../StarlightWiki/src/content/docs/
             cp -r ./docs/* ../StarlightWiki/src/content/docs/
 
-        - name: 'Create ENV File'
-          run: |
-            touch ../StarlightWiki/.env
-            echo VITE_TITLE="Daxa Wiki" >> ../StarlightWiki/.env
-            echo VITE_SITE_URL="https://wiki.daxa.dev" >> ../StarlightWiki/.env
-            echo VITE_GITHUB_URL="https://github.com/learndaxa/Wiki" >> ../StarlightWiki/.env
-            echo VITE_DISCORD_INVITE="https://discord.gg/mZrUeJfxB8" >> ../StarlightWiki/.env
-
         - name: Building Static Site
           run: |
             cd ../StarlightWiki/
             npm install
-            npm run astro build
+            VITE_SITE=wiki npm run astro build
 
         - name: Upload artifact
           uses: actions/upload-pages-artifact@v1
