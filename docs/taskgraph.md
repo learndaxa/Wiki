@@ -72,7 +72,7 @@ graph.add_task({
   },
   .task = [=](daxa::TaskInterface ti)
   {
-    copy_image_to_image(ti.recorder, ti.get(src).ids[0], ti.get(dst).ids[0], blur_width);
+    copy_image_to_image(ti.recorder, ti.id(src), ti.id(dst), blur_width);
   },
   .name = "example task",
 });
@@ -125,11 +125,18 @@ This includes:
 - runtime daxa resource view ids (these are created by the graph based on the attachment view type)
 - image layout
 
+The get function alone can make the code verbose. The TaskInterface provides many helper functions such as:
+* `id`
+* `view`
+* `info`
+* `device_address`
+
 Aside from attachment information the interface also provides:
 
 - a command recorder (automatically reused by the graph)
 - a transfer memory allocator (super fast per execution linear allocator for mapped gpu memory)
 - attachment shader data (generated from the list of attachments, can be send to shader)
+- task metadata such as the name and index
 
 ### TaskHead
 
@@ -165,6 +172,11 @@ DAXA_TH_BUFFER_ID(COMPUTE_SHADER_WRITE, REGULAR_2D,               dst_image)
 DAXA_DECL_TASK_HEAD_END
 ```
 
+> NOTE: COMPUTE_SHADER_READ is from the enum daxa::TaskBufferAccess
+
+> NOTE: For each of these access enum values, there is also a shortened version, example: CS_READ
+
+
 This task head declaration will translate to the following glsl shader struct:
 
 ```c
@@ -196,6 +208,10 @@ namespace MyTaskHead
     // Number of declared attachments:
     static inline constexpr daxa::usize ATTACHMENT_COUNT = {/* TEMPLATE MAGIC */};
 
+    // Generated Types:
+    static inline constexpr auto ATTACHMENTS_T = {/* TEMPLATE MAGIC */};
+    static inline constexpr auto VIEWS_T = {/* TEMPLATE MAGIC */};
+
     // Attachment meta information:
     static inline constexpr auto ATTACHMENTS = {/* TEMPLATE MAGIC */};
 
@@ -212,13 +228,14 @@ namespace MyTaskHead
     // also getting some fields into the task structs namespace:
     struct Task : public daxa::IPartialTask
     {
-        using AttachmentViews = daxa::AttachmentViews<ATTACHMENT_COUNT>;
+        using AttachmentViews = ATTACHMENTS_T;
+        using Views = VIEWS_T;
         static constexpr AttachmentsStruct<ATTACHMENT_COUNT> const & AT = ATTACHMENTS;
         static constexpr daxa::usize ATTACH_COUNT = ATTACHMENT_COUNT;
         static auto name() -> std::string_view { return std::string_view{NAME}; }
         static auto attachments() -> std::span<daxa::TaskAttachment const>
         {
-            return AT.attachment_decl_array;
+            return AT._internal.values;
         }
         static auto attachment_shader_blob_size() -> daxa::u32
         {
@@ -292,13 +309,15 @@ daxa::ImageViewId some_img_view = ...;
 daxa::BufferViewId some_buf_view = ...;
 
 task_graph.add_task(MyTask{
-  .views = {
-    MyTaskHead::AT.src_buffer | some_img_view,
-    MyTaskHead::AT.dst_image | some_img_view,
+  .views = MyTask::Views{
+    .src_buffer = some_img_view,
+    .dst_image = some_img_view,
   },
   .other_stuff = ...,
 });
 ```
+
+Daxa automatically generates a struct type `MyTask::Views` for syntactic suggar when assigning views. Its a struct with one field for each declared attachment. Each field is of the type `TaskAttachmentViewWrapper<T>` which accept task resource views.
 
 ### Alternative Use Of TaskHead
 
@@ -309,12 +328,14 @@ Task heads can also be directly used in inline tasks without having to declare a
 daxa::ImageViewId some_img_view = ...;
 daxa::BufferViewId some_buf_view = ...;
 
-task_graph.add_task(daxa::InlineTaskWithHead<MyTaskHead::Task>{
-  .views = std::array{
-    MyTaskHead::AT.src_buffer | some_img_view,
-    MyTaskHead::AT.dst_image | some_img_view,
-  },
-  .task = [=](daxa::TaskInterface ti) { ... },
+using MyTask = daxa::InlineTaskWithHead<MyTaskHead::Task>
+
+task_graph.add_task(MyTask{
+    .views = MyTask::Views{
+      .src_buffer = some_img_view,
+      .dst_image = some_img_view,
+    },
+    .task = [=](daxa::TaskInterface ti) { ... },
 });
 
 ```
@@ -344,16 +365,29 @@ void callback(daxa::TaskInterface ti)
     }
     // The Buffer Attachment info contents:
     {
+        // Information retrieved from convenience functions:
+        [[maybe_unused]] daxa::BufferId id_ = ti.id(AT.src_buffer, /*optional*/0);
+        [[maybe_unused]] daxa::DeviceAddress address_ = ti.device_address(AT.src_buffer, /*optional*/0).value();
+        [[maybe_unused]] std::byte* host_address = ti.buffer_host_address(AT.src_buffer).value();
+        [[maybe_unused]] daxa::BufferInfo info_ = ti.info(AT.src_buffer, /*optional*/0).value();
+
+        // Information retrieved from the .get meta function:
+        [[maybe_unused]] std::span<daxa::BufferId const> ids = ti.get(AT.src_buffer).ids;
         [[maybe_unused]] daxa::BufferId id = ti.get(AT.src_buffer).ids[0];
         [[maybe_unused]] char const * name = ti.get(AT.src_buffer).name;
         [[maybe_unused]] daxa::TaskBufferAccess access = ti.get(AT.src_buffer).access;
         [[maybe_unused]] u8 shader_array_size = ti.get(AT.src_buffer).shader_array_size;
         [[maybe_unused]] bool shader_as_address = ti.get(AT.src_buffer).shader_as_address;
         [[maybe_unused]] daxa::TaskBufferView view = ti.get(AT.src_buffer).view;
-        [[maybe_unused]] std::span<daxa::BufferId const> ids = ti.get(AT.src_buffer).ids;
     }
     // The Image Attachment info contents:
     {
+        // Information retrieved from convenience functions:
+        [[maybe_unused]] daxa::ImageId id_ = ti.id(AT.dst_image, /*optional*/0);
+        [[maybe_unused]] daxa::ImageViewId view_ = ti.view(AT.dst_image, /*optional*/0);
+        [[maybe_unused]] daxa::ImageViewInfo info_ = ti.info(AT.dst_image, /*optional*/0).value();
+
+        // Information retrieved from the .get meta function:
         [[maybe_unused]] char const * name = ti.get(AT.dst_image).name;
         [[maybe_unused]] daxa::TaskImageAccess access = ti.get(AT.dst_image).access;
         [[maybe_unused]] daxa::ImageViewType view_type = ti.get(AT.dst_image).view_type;
@@ -367,19 +401,6 @@ void callback(daxa::TaskInterface ti)
         ///          If you use an inline attachment and dont specify the VIEW_TYPE like for a transfer op,
         ///          there will be an empty daxa::ImageViewId{} put into this array for the attachment!
         [[maybe_unused]] std::span<daxa::ImageViewId const> view_ids = ti.get(AT.dst_image).view_ids;
-    }
-    // The interface has multiple convenience functions for easier access to the underlying resources attributes:
-    {
-        // Overloaded for buffer, blas, tlas, image
-        [[maybe_unused]] daxa::BufferInfo info = ti.info(AT.src_buffer).value();
-        // Overloaded for buffer, blas, tlas
-        [[maybe_unused]] daxa::DeviceAddress address = ti.device_address(AT.src_buffer).value();
-
-        [[maybe_unused]] std::byte* host_address = ti.buffer_host_address(AT.src_buffer).value();
-        [[maybe_unused]] daxa::ImageViewInfo img_view_info = ti.image_view_info(AT.dst_image).value();
-
-        // In case the task resource has an array of real resources, one can use the optional second parameter to access those:
-        [[maybe_unused]] daxa::BufferInfo info2 = ti.info(AT.src_buffer, 123 /*resource index*/).value();
     }
     // The attachment infos are also provided, directly via a span:
     for ([[maybe_unused]] daxa::TaskAttachmentInfo const & attach : ti.attachment_infos)
